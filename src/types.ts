@@ -31,6 +31,7 @@ export interface VariableDefinition {
  */
 export interface RowData {
   id: string;
+  name: string;
   values: Record<string, boolean | number | string>;
   /**
    * If you want to store the row's computed score or rank directly,

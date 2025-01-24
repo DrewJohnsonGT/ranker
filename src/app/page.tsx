@@ -50,7 +50,10 @@ const variableSchema = z.object({
   weight: z.number().min(0),
 });
 
-const rowSchema = z.record(z.union([z.boolean(), z.number(), z.string()]));
+const rowSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  values: z.record(z.union([z.boolean(), z.number(), z.string()])),
+});
 
 export interface AppState {
   variables: VariableDefinition[];
@@ -74,7 +77,6 @@ export default function Home() {
     useState<VariableDefinition | null>(null);
   const [editingRow, setEditingRow] = useState<RowData | null>(null);
 
-  // Forms
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
     defaultValues: {
@@ -87,7 +89,9 @@ export default function Home() {
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
     resolver: zodResolver(rowSchema),
-    defaultValues: {},
+    defaultValues: {
+      name: '',
+    },
   });
 
   function handleAddVariable(data: z.infer<typeof variableSchema>) {
@@ -114,7 +118,10 @@ export default function Home() {
   function handleAddRow(data: z.infer<typeof rowSchema>) {
     // Basic check: fill required variables
     for (const v of variables) {
-      if (v.required && (data[v.name] === undefined || data[v.name] === '')) {
+      if (
+        v.required &&
+        (data.values[v.name] === undefined || data.values[v.name] === '')
+      ) {
         return;
       }
     }
@@ -122,14 +129,17 @@ export default function Home() {
     if (editingRow) {
       // Update existing row
       setRows(
-        rows.map((r) => (r.id === editingRow.id ? { ...r, values: data } : r)),
+        rows.map((r) =>
+          r.id === editingRow.id ? { ...r, values: data.values } : r,
+        ),
       );
       setEditingRow(null);
     } else {
       // Add new row
       const row: RowData = {
         id: crypto.randomUUID(),
-        values: data,
+        name: data.name,
+        values: data.values,
       };
       setRows([...rows, row]);
     }
@@ -338,7 +348,7 @@ export default function Home() {
             <DialogTrigger asChild>
               <Button variant="outline">Add Row</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>{editingRow ? 'Edit Row' : 'New Row'}</DialogTitle>
               </DialogHeader>
@@ -347,11 +357,24 @@ export default function Home() {
                   onSubmit={rowForm.handleSubmit(handleAddRow)}
                   className="space-y-4"
                 >
+                  <FormField
+                    control={rowForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   {variables.map((variable) => (
                     <FormField
                       key={variable.id}
                       control={rowForm.control}
-                      name={variable.name}
+                      name={`values.${variable.name}`}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{variable.name}</FormLabel>
@@ -365,6 +388,7 @@ export default function Home() {
                               <Input
                                 type="number"
                                 {...field}
+                                value={field.value?.toString() ?? ''}
                                 onChange={(e) =>
                                   field.onChange(parseInt(e.target.value))
                                 }
