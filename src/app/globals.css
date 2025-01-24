@@ -15,8 +15,8 @@
     --primary-foreground: 180 90% 95%;
     --secondary: 180 30% 50%;
     --secondary-foreground: 180 30% 95%;
-    --accent: 270 80% 60%;
-    --accent-foreground: 270 80% 95%;
+    --accent: 195 53% 90%;
+    --accent-foreground: 210 20% 20%;
 
     --destructive: 0 100% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -52,10 +52,6 @@
     --rank-medium-foreground: var(--warning-foreground);
     --rank-high: var(--success);
     --rank-high-foreground: var(--success-foreground);
-
-    --param-cost: var(--chart-orange);
-    --param-distance: var(--chart-blue);
-    --param-rating: var(--chart-green);
   }
 
   .dark {
@@ -70,8 +66,8 @@
     --primary-foreground: 180 90% 95%;
     --secondary: 180 30% 60%;
     --secondary-foreground: 180 30% 95%;
-    --accent: 270 80% 70%;
-    --accent-foreground: 270 80% 95%;
+    --accent: 190 40% 15%;
+    --accent-foreground: 195 53% 90%;
 
     --destructive: 0 100% 65%;
     --destructive-foreground: 0 0% 100%;
@@ -104,10 +100,6 @@
     --rank-medium-foreground: var(--warning-foreground);
     --rank-high: var(--success);
     --rank-high-foreground: var(--success-foreground);
-
-    --param-cost: var(--chart-orange);
-    --param-distance: var(--chart-blue);
-    --param-rating: var(--chart-green);
   }
 }
 
@@ -122,9 +114,5 @@
 
 html,
 body {
-  @apply h-[100dvh] w-[100dvw] bg-background antialiased dark:[color-scheme:dark];
-}
-
-#main {
-  @apply h-full;
+  @apply h-[100dvh] w-full bg-background antialiased dark:[color-scheme:dark];
 }

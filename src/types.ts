@@ -13,4 +13,6 @@ export interface RowData {
   values: Record<string, boolean | number | string>;
   rank?: number;
   score?: number;
+  scorePercentage?: number;
+  relativeScorePercentage?: number;
 }

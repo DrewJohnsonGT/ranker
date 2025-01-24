@@ -6,7 +6,7 @@ const Table: React.FC<React.ComponentProps<'table'>> = ({
   ...props
 }) => (
   <table
-    className={cn('w-full caption-bottom text-sm shadow-sm', className)}
+    className={cn('w-full caption-bottom text-sm', className)}
     {...props}
   />
 );

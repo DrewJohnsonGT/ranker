@@ -38,8 +38,8 @@ const buttonVariants = cva(
         success: 'bg-success text-success-foreground',
       },
       size: {
-        default: 'h-input px-4 py-2',
-        icon: 'size-input',
+        default: 'h-9 px-4 py-2',
+        icon: 'size-9',
         lg: 'h-10 px-8',
         sm: 'h-8 px-3 text-xs',
         smallIcon: 'size-5',
