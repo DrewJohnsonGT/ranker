@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { LuOctagonAlert } from 'react-icons/lu';
 import z from 'zod';
+import { RankedBars } from '~/components/RankedBars';
 import { Button } from '~/components/ui/Button';
 import {
   Dialog,
@@ -44,7 +45,7 @@ import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { RowData, VariableDefinition } from '~/types';
 import { DEFAULT_ROWS, DEFAULT_VARIABLES } from '~/utils/constants';
 
-const NAME_OF_ROWS = 'Schools';
+const NAME_OF_ROW = 'School';
 
 const variableSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -92,6 +93,7 @@ export default function Home() {
     resolver: zodResolver(rowSchema),
     defaultValues: {
       name: '',
+      values: {},
     },
   });
 
@@ -150,8 +152,17 @@ export default function Home() {
 
   function startEditingRow(row: RowData) {
     setEditingRow(row);
-    rowForm.reset(row.values);
+    rowForm.reset({
+      name: row.name,
+      values: row.values,
+    });
     setOpenRowDialog(true);
+  }
+
+  function getValueColor(value: number) {
+    if (value <= 3) return 'text-rank-low';
+    if (value <= 7) return 'text-rank-medium';
+    return 'text-rank-high';
   }
 
   function computeRowScore(row: RowData) {
@@ -172,13 +183,23 @@ export default function Home() {
     return [...variables].sort((a, b) => a.weight - b.weight);
   }, [variables]);
 
-  const sortedRows = useMemo(() => {
-    return [...rows].sort((a, b) => computeRowScore(b) - computeRowScore(a));
+  const sortedRowsWithScore = useMemo(() => {
+    return [...rows]
+      .map((row) => ({
+        ...row,
+        score: computeRowScore(row),
+      }))
+      .sort((a, b) => b.score - a.score);
   }, [rows, variables]);
 
   const totalWeight = useMemo(() => {
     return variables.reduce((acc, v) => acc + v.weight, 0);
   }, [variables]);
+
+  const maxScore = useMemo(() => {
+    if (!sortedRowsWithScore[0]) return 0;
+    return sortedRowsWithScore[0].score;
+  }, [sortedRowsWithScore]);
 
   if (!mountedVariables || !mountedRows) {
     return <LoadingSpinner />;
@@ -325,14 +346,16 @@ export default function Home() {
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{NAME_OF_ROWS}</h2>
+          <h2 className="text-xl font-semibold">{NAME_OF_ROW}s</h2>
           <Dialog open={openRowDialog} onOpenChange={setOpenRowDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline">Add {NAME_OF_ROWS}</Button>
+              <Button variant="outline">Add {NAME_OF_ROW}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-xl">
               <DialogHeader>
-                <DialogTitle>{editingRow ? 'Edit Row' : 'New Row'}</DialogTitle>
+                <DialogTitle>
+                  {editingRow ? `Edit ${NAME_OF_ROW}` : `New ${NAME_OF_ROW}`}
+                </DialogTitle>
               </DialogHeader>
               <Form {...rowForm}>
                 <form
@@ -370,7 +393,9 @@ export default function Home() {
                               ) : (
                                 <Input
                                   type="number"
-                                  className="max-w-[100px]"
+                                  min={0}
+                                  max={10}
+                                  className={`max-w-[100px] ${getValueColor(Number(field.value))}`}
                                   {...field}
                                   value={field.value?.toString() ?? ''}
                                   onChange={(e) =>
@@ -404,9 +429,9 @@ export default function Home() {
           </Dialog>
         </div>
 
-        {sortedRows.length === 0 ? (
+        {sortedRowsWithScore.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No {NAME_OF_ROWS} added yet.
+            No {NAME_OF_ROW}s added yet.
           </p>
         ) : (
           <Table>
@@ -420,8 +445,10 @@ export default function Home() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedRows.map((row) => {
-                const score = computeRowScore(row);
+              {sortedRowsWithScore.map((row) => {
+                const score = row.score;
+                const percentage =
+                  maxScore > 0 ? ((score / maxScore) * 100).toFixed(1) : '0.0';
                 return (
                   <TableRow
                     key={row.id}
@@ -433,11 +460,25 @@ export default function Home() {
                       const val = row.values[v.name];
                       return (
                         <TableCell key={v.id}>
-                          {v.type === 'boolean' ? String(val) : val}
+                          {v.type === 'boolean' ? (
+                            <span
+                              className={
+                                val ? 'text-rank-high' : 'text-rank-low'
+                              }
+                            >
+                              {String(val)}
+                            </span>
+                          ) : (
+                            <span className={getValueColor(Number(val))}>
+                              {val}
+                            </span>
+                          )}
                         </TableCell>
                       );
                     })}
-                    <TableCell>{score.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {score.toFixed(2)} ({percentage}%)
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -445,6 +486,7 @@ export default function Home() {
           </Table>
         )}
       </div>
+      <RankedBars rows={sortedRowsWithScore} maxScore={maxScore} />
     </div>
   );
 }

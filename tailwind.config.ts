@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 import { default as tailwindcssAnimate } from 'tailwindcss-animate';
 
-const INPUT_HEIGHT = '2.25rem';
+const INPUT_HEIGHT = '2.5rem';
 
 const config: Config = {
   content: ['./src/**/*.tsx'],
@@ -22,6 +22,14 @@ const config: Config = {
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
+        },
+        rank: {
+          low: 'hsl(var(--rank-low))',
+          lowForeground: 'hsl(var(--rank-low-foreground))',
+          medium: 'hsl(var(--rank-medium))',
+          mediumForeground: 'hsl(var(--rank-medium-foreground))',
+          high: 'hsl(var(--rank-high))',
+          highForeground: 'hsl(var(--rank-high-foreground))',
         },
         background: 'hsl(var(--background))',
         border: 'hsl(var(--border))',

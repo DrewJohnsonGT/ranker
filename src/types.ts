@@ -12,4 +12,5 @@ export interface RowData {
   name: string;
   values: Record<string, boolean | number | string>;
   rank?: number;
+  score?: number;
 }
