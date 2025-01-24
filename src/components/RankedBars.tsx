@@ -17,6 +17,7 @@ import {
   ChartTooltipContent,
 } from '~/components/ui/Chart';
 import { RowData } from '~/types';
+import { NAME_OF_ROW } from '~/utils/constants';
 
 interface RankedBarsProps {
   rows: RowData[];
@@ -34,57 +35,53 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function RankedBars({ rows, maxScore }: RankedBarsProps) {
-  const chartData = rows.map((row) => ({
+  const chartData = rows.map((row, index) => ({
     name: row.name,
     score: Number((row.score || 0).toFixed(2)),
+    fill: `var(--chart-color-${(index % 10) + 1})`, // Cycle through chart colors 1-10
   }));
 
   return (
-    <Card className="max-w-xl p-0">
+    <Card className="max-w-xl p-4">
       <CardHeader>
-        <CardTitle>Rankings</CardTitle>
+        <CardTitle>{NAME_OF_ROW} Rankings</CardTitle>
         <CardDescription>Sorted by score</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <ChartContainer config={chartConfig}>
           <BarChart
             data={chartData}
             layout="vertical"
-            margin={{
-              left: -20,
-              right: 20,
-            }}
             height={rows.length * 50}
           >
             <XAxis
               type="number"
               domain={[0, maxScore]}
-              tickFormatter={(value) => value.toFixed(1)}
+              tickFormatter={(value) => ''}
+              tickLine={false}
+              axisLine={false}
             />
             <YAxis
               dataKey="name"
               type="category"
               tickLine={false}
-              tickMargin={10}
+              tickMargin={40}
               axisLine={false}
+              width={100}
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Bar
-              dataKey="score"
-              fill="var(--color-score)"
-              radius={[0, 4, 4, 0]}
-            />
+            <Bar dataKey="score" radius={[0, 4, 4, 0]} fillOpacity={0.9} />
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex-col items-center gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
           {rows[0]?.name} is ranked highest with {rows[0]?.score?.toFixed(1)}{' '}
           points
           <LuTrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing rankings for {rows.length} items
+          Showing rankings for {rows.length} {NAME_OF_ROW}s
         </div>
       </CardFooter>
     </Card>

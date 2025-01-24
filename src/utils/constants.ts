@@ -1,5 +1,7 @@
 import { RowData, VariableDefinition } from '~/types';
 
+export const NAME_OF_ROW = 'School';
+
 export const DEFAULT_VARIABLES: VariableDefinition[] = [
   {
     id: crypto.randomUUID(),
@@ -94,6 +96,54 @@ export const DEFAULT_ROWS: RowData[] = [
       Culture: 4,
       Breadth: 3,
       Depth: 4,
+    },
+  },
+  {
+    id: crypto.randomUUID(),
+    name: 'School C',
+    values: {
+      'Has PCIT': true,
+      'Quality of PCIT': 3,
+      'Has Autism Evals': true,
+      'Quality of Autism Evals': 3,
+      'Has Research': false,
+      'Quality of Research': 0,
+      Location: 5,
+      Culture: 4,
+      Breadth: 3,
+      Depth: 3,
+    },
+  },
+  {
+    id: crypto.randomUUID(),
+    name: 'School D',
+    values: {
+      'Has PCIT': true,
+      'Quality of PCIT': 5,
+      'Has Autism Evals': false,
+      'Quality of Autism Evals': 0,
+      'Has Research': true,
+      'Quality of Research': 3,
+      Location: 2,
+      Culture: 5,
+      Breadth: 4,
+      Depth: 3,
+    },
+  },
+  {
+    id: crypto.randomUUID(),
+    name: 'School E',
+    values: {
+      'Has PCIT': false,
+      'Quality of PCIT': 0,
+      'Has Autism Evals': true,
+      'Quality of Autism Evals': 5,
+      'Has Research': true,
+      'Quality of Research': 5,
+      Location: 3,
+      Culture: 3,
+      Breadth: 5,
+      Depth: 5,
     },
   },
 ];

@@ -43,9 +43,13 @@ import {
 } from '~/components/ui/Table';
 import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { RowData, VariableDefinition } from '~/types';
-import { DEFAULT_ROWS, DEFAULT_VARIABLES } from '~/utils/constants';
-
-const NAME_OF_ROW = 'School';
+import { computeRowScore } from '~/utils/computeRowScore';
+import {
+  DEFAULT_ROWS,
+  DEFAULT_VARIABLES,
+  NAME_OF_ROW,
+} from '~/utils/constants';
+import { getValueColor } from '~/utils/getValueColor';
 
 const variableSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -64,7 +68,6 @@ export interface AppState {
 }
 
 export default function Home() {
-  // Persist variables and rows in local storage
   const [variables, setVariables, mountedVariables] = useLocalStorage<
     VariableDefinition[]
   >('variables', DEFAULT_VARIABLES);
@@ -73,7 +76,6 @@ export default function Home() {
     DEFAULT_ROWS,
   );
 
-  // Dialog state
   const [openVariableDialog, setOpenVariableDialog] = useState(false);
   const [openRowDialog, setOpenRowDialog] = useState(false);
   const [editingVariable, setEditingVariable] =
@@ -99,7 +101,6 @@ export default function Home() {
 
   function handleAddVariable(data: z.infer<typeof variableSchema>) {
     if (editingVariable) {
-      // Update existing variable
       setVariables(
         variables.map((v) =>
           v.id === editingVariable.id ? { ...v, ...data } : v,
@@ -107,7 +108,6 @@ export default function Home() {
       );
       setEditingVariable(null);
     } else {
-      // Add new variable
       const variable: VariableDefinition = {
         id: crypto.randomUUID(),
         ...data,
@@ -159,26 +159,6 @@ export default function Home() {
     setOpenRowDialog(true);
   }
 
-  function getValueColor(value: number) {
-    if (value <= 3) return 'text-rank-low';
-    if (value <= 7) return 'text-rank-medium';
-    return 'text-rank-high';
-  }
-
-  function computeRowScore(row: RowData) {
-    return variables.reduce((acc, v) => {
-      const val = row.values[v.name];
-      if (v.type === 'boolean') {
-        return acc + (val === true ? v.weight : 0);
-      } else if (v.type === 'number') {
-        const numericVal =
-          typeof val === 'number' ? val : parseFloat(val as string);
-        return acc + numericVal * v.weight;
-      }
-      return acc;
-    }, 0);
-  }
-
   const sortedVariables = useMemo(() => {
     return [...variables].sort((a, b) => a.weight - b.weight);
   }, [variables]);
@@ -187,7 +167,7 @@ export default function Home() {
     return [...rows]
       .map((row) => ({
         ...row,
-        score: computeRowScore(row),
+        score: computeRowScore(row, variables),
       }))
       .sort((a, b) => b.score - a.score);
   }, [rows, variables]);

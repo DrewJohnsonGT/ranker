@@ -33,13 +33,16 @@
     --ring: var(--primary);
     --link: var(--primary);
 
-    --chart-blue: 210 80% 50%;
-    --chart-green: 140 70% 45%;
-    --chart-orange: 30 80% 55%;
-    --chart-pink: 340 80% 70%;
-    --chart-red: 0 90% 55%;
-    --chart-yellow: 50 100% 50%;
-    --chart-purple: 260 70% 70%;
+    --chart-color-1: #ff4040;
+    --chart-color-2: #2fb8af;
+    --chart-color-3: #2a9cba;
+    --chart-color-4: #6fb594;
+    --chart-color-5: #ffd970;
+    --chart-color-6: #c07878;
+    --chart-color-7: #7749d1;
+    --chart-color-8: #148f88;
+    --chart-color-9: #ff8fa3;
+    --chart-color-10: #cd74cd;
 
     --radius: 0.5rem;
 
