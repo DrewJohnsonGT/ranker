@@ -18,7 +18,7 @@ const TableHeader: React.FC<React.ComponentProps<'thead'>> = ({
 }) => (
   <thead
     className={cn(
-      'sticky top-0 z-10 bg-accent text-accent-foreground dark:bg-input-background [&_tr]:border-b',
+      'sticky top-0 z-10 bg-accent/20 text-foreground dark:bg-input-background [&_tr]:border-b',
       className,
     )}
     {...props}

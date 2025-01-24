@@ -4,31 +4,27 @@
 
 @layer base {
   :root {
-    /* -- Base Colors -- */
-    --background: 30 10% 96%; /* Warm, light background */
-    --foreground: 30 10% 20%; /* Dark warm gray for text */
-    --card: 30 10% 99%; /* Slightly lighter than background */
-    --card-foreground: 30 10% 20%; /* Same as foreground */
-    --popover: 30 10% 100%; /* White for popover */
-    --popover-foreground: 30 10% 20%; /* Same as foreground */
+    --background: 30 10% 96%;
+    --foreground: 30 10% 20%;
+    --card: 30 10% 99%;
+    --card-foreground: 30 10% 20%;
+    --popover: 30 10% 100%;
+    --popover-foreground: 30 10% 20%;
 
-    /* -- Brand/Action Colors -- */
-    --primary: 180 90% 40%; /* Teal as primary */
+    --primary: 180 90% 40%;
     --primary-foreground: 180 90% 95%;
     --secondary: 180 30% 50%;
     --secondary-foreground: 180 30% 95%;
-    --accent: 270 80% 60%; /* Vibrant purple accent */
+    --accent: 270 80% 60%;
     --accent-foreground: 270 80% 95%;
 
-    /* -- Semantic Colors -- */
-    --destructive: 0 100% 60%; /* Strong red */
+    --destructive: 0 100% 60%;
     --destructive-foreground: 0 0% 100%;
-    --success: 120 90% 35%; /* Bright green */
+    --success: 120 90% 35%;
     --success-foreground: 0 0% 100%;
-    --warning: 40 90% 55%; /* Orange-yellow */
+    --warning: 40 90% 55%;
     --warning-foreground: 0 0% 100%;
 
-    /* -- Supporting Colors -- */
     --muted: 30 10% 90%;
     --muted-foreground: 30 10% 40%;
     --border: 30 10% 80%;
@@ -37,7 +33,6 @@
     --ring: var(--primary);
     --link: var(--primary);
 
-    /* -- Chart Colors -- */
     --chart-blue: 210 80% 50%;
     --chart-green: 140 70% 45%;
     --chart-orange: 30 80% 55%;
@@ -46,10 +41,8 @@
     --chart-yellow: 50 100% 50%;
     --chart-purple: 260 70% 70%;
 
-    /* -- Corner Radius -- */
     --radius: 0.5rem;
 
-    /* -- Ranking Tokens (Low → Medium → High) -- */
     --rank-low: var(--destructive);
     --rank-low-foreground: var(--destructive-foreground);
     --rank-medium: var(--warning);
@@ -57,14 +50,12 @@
     --rank-high: var(--success);
     --rank-high-foreground: var(--success-foreground);
 
-    /* -- Parameter Tokens (optional for labeling different weighted inputs) -- */
     --param-cost: var(--chart-orange);
     --param-distance: var(--chart-blue);
     --param-rating: var(--chart-green);
   }
 
   .dark {
-    /* -- Base Colors (Dark) -- */
     --background: 30 10% 10%;
     --foreground: 30 10% 90%;
     --card: 30 10% 15%;
@@ -72,7 +63,6 @@
     --popover: 30 10% 15%;
     --popover-foreground: 30 10% 80%;
 
-    /* -- Brand/Action Colors (Dark) -- */
     --primary: 180 90% 50%;
     --primary-foreground: 180 90% 95%;
     --secondary: 180 30% 60%;
@@ -80,7 +70,6 @@
     --accent: 270 80% 70%;
     --accent-foreground: 270 80% 95%;
 
-    /* -- Semantic Colors (Dark) -- */
     --destructive: 0 100% 65%;
     --destructive-foreground: 0 0% 100%;
     --success: 120 90% 40%;
@@ -88,7 +77,6 @@
     --warning: 40 90% 60%;
     --warning-foreground: 0 0% 100%;
 
-    /* -- Supporting Colors (Dark) -- */
     --muted: 30 10% 25%;
     --muted-foreground: 30 10% 70%;
     --border: 30 10% 30%;
@@ -97,7 +85,6 @@
     --ring: var(--primary);
     --link: var(--primary);
 
-    /* -- Chart Colors (Dark) -- */
     --chart-blue: 210 80% 60%;
     --chart-green: 140 70% 50%;
     --chart-orange: 30 80% 55%;
@@ -106,10 +93,8 @@
     --chart-yellow: 50 100% 50%;
     --chart-purple: 260 70% 70%;
 
-    /* -- Corner Radius -- */
     --radius: 0.5rem;
 
-    /* -- Ranking Tokens (Dark) -- */
     --rank-low: var(--destructive);
     --rank-low-foreground: var(--destructive-foreground);
     --rank-medium: var(--warning);
@@ -117,7 +102,6 @@
     --rank-high: var(--success);
     --rank-high-foreground: var(--success-foreground);
 
-    /* -- Parameter Tokens (Dark) -- */
     --param-cost: var(--chart-orange);
     --param-distance: var(--chart-blue);
     --param-rating: var(--chart-green);

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { LuOctagonAlert } from 'react-icons/lu';
 import z from 'zod';
 import { Button } from '~/components/ui/Button';
 import {
@@ -43,10 +44,11 @@ import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { RowData, VariableDefinition } from '~/types';
 import { DEFAULT_ROWS, DEFAULT_VARIABLES } from '~/utils/constants';
 
+const NAME_OF_ROWS = 'Schools';
+
 const variableSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   type: z.enum(['boolean', 'number']),
-  required: z.boolean(),
   weight: z.number().min(0),
 });
 
@@ -82,7 +84,6 @@ export default function Home() {
     defaultValues: {
       name: '',
       type: 'boolean',
-      required: false,
       weight: 0,
     },
   });
@@ -116,16 +117,6 @@ export default function Home() {
   }
 
   function handleAddRow(data: z.infer<typeof rowSchema>) {
-    // Basic check: fill required variables
-    for (const v of variables) {
-      if (
-        v.required &&
-        (data.values[v.name] === undefined || data.values[v.name] === '')
-      ) {
-        return;
-      }
-    }
-
     if (editingRow) {
       // Update existing row
       setRows(
@@ -152,7 +143,6 @@ export default function Home() {
     variableForm.reset({
       name: variable.name,
       type: variable.type,
-      required: variable.required,
       weight: variable.weight,
     });
     setOpenVariableDialog(true);
@@ -164,12 +154,6 @@ export default function Home() {
     setOpenRowDialog(true);
   }
 
-  /**
-   * Compute a simple "score" for each row based on variable types & weights.
-   * - For boolean variables, treat `true` as 1 * weight, `false` as 0.
-   * - For numeric variables, multiply value by weight.
-   * (Adjust logic as needed for your real ranking algorithm.)
-   */
   function computeRowScore(row: RowData) {
     return variables.reduce((acc, v) => {
       const val = row.values[v.name];
@@ -184,10 +168,17 @@ export default function Home() {
     }, 0);
   }
 
-  // Sort rows by descending computed score (highest = best)
+  const sortedVariables = useMemo(() => {
+    return [...variables].sort((a, b) => a.weight - b.weight);
+  }, [variables]);
+
   const sortedRows = useMemo(() => {
     return [...rows].sort((a, b) => computeRowScore(b) - computeRowScore(a));
   }, [rows, variables]);
+
+  const totalWeight = useMemo(() => {
+    return variables.reduce((acc, v) => acc + v.weight, 0);
+  }, [variables]);
 
   if (!mountedVariables || !mountedRows) {
     return <LoadingSpinner />;
@@ -195,10 +186,18 @@ export default function Home() {
 
   return (
     <div className="space-y-8 p-6">
-      <h1 className="text-2xl font-bold">Weighted Ranker</h1>
+      <h1 className="text-2xl font-bold">Ranker</h1>
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Variables</h2>
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            Variables
+            {totalWeight !== 100 && (
+              <span className="flex items-center gap-1 text-base text-destructive">
+                <LuOctagonAlert className="size-4" />
+                Weights do not add up to 100 ({totalWeight})
+              </span>
+            )}
+          </h2>
           <Dialog
             open={openVariableDialog}
             onOpenChange={setOpenVariableDialog}
@@ -256,22 +255,6 @@ export default function Home() {
                   />
                   <FormField
                     control={variableForm.control}
-                    name="required"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormLabel>Required?</FormLabel>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={variableForm.control}
                     name="weight"
                     render={({ field }) => (
                       <FormItem>
@@ -308,7 +291,7 @@ export default function Home() {
           </Dialog>
         </div>
 
-        {variables.length === 0 ? (
+        {sortedVariables.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No variables defined yet.
           </p>
@@ -319,20 +302,20 @@ export default function Home() {
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Weight</TableHead>
-                <TableHead>Required</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {variables.map((v) => (
+              {sortedVariables.map((v) => (
                 <TableRow
                   key={v.id}
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => startEditingVariable(v)}
                 >
                   <TableCell>{v.name}</TableCell>
-                  <TableCell>{v.type}</TableCell>
+                  <TableCell>
+                    {v.type === 'boolean' ? 'True/False' : 'Number'}
+                  </TableCell>
                   <TableCell>{v.weight}</TableCell>
-                  <TableCell>{v.required ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -340,15 +323,14 @@ export default function Home() {
         )}
       </div>
 
-      {/* ---------- Rows Section ---------- */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Rows</h2>
+          <h2 className="text-xl font-semibold">{NAME_OF_ROWS}</h2>
           <Dialog open={openRowDialog} onOpenChange={setOpenRowDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline">Add Row</Button>
+              <Button variant="outline">Add {NAME_OF_ROWS}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-xl">
               <DialogHeader>
                 <DialogTitle>{editingRow ? 'Edit Row' : 'New Row'}</DialogTitle>
               </DialogHeader>
@@ -370,36 +352,39 @@ export default function Home() {
                       </FormItem>
                     )}
                   />
-                  {variables.map((variable) => (
-                    <FormField
-                      key={variable.id}
-                      control={rowForm.control}
-                      name={`values.${variable.name}`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{variable.name}</FormLabel>
-                          <FormControl>
-                            {variable.type === 'boolean' ? (
-                              <Switch
-                                checked={field.value === true}
-                                onCheckedChange={field.onChange}
-                              />
-                            ) : (
-                              <Input
-                                type="number"
-                                {...field}
-                                value={field.value?.toString() ?? ''}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value))
-                                }
-                              />
-                            )}
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                  <div className="grid grid-cols-2 gap-2">
+                    {variables.map((variable) => (
+                      <FormField
+                        key={variable.id}
+                        control={rowForm.control}
+                        name={`values.${variable.name}`}
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col gap-2">
+                            <FormLabel>{variable.name}</FormLabel>
+                            <FormControl>
+                              {variable.type === 'boolean' ? (
+                                <Switch
+                                  checked={field.value === true}
+                                  onCheckedChange={field.onChange}
+                                />
+                              ) : (
+                                <Input
+                                  type="number"
+                                  className="max-w-[100px]"
+                                  {...field}
+                                  value={field.value?.toString() ?? ''}
+                                  onChange={(e) =>
+                                    field.onChange(parseInt(e.target.value))
+                                  }
+                                />
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
                   <DialogFooter>
                     <Button
                       variant="outline"
@@ -420,11 +405,14 @@ export default function Home() {
         </div>
 
         {sortedRows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No rows added yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No {NAME_OF_ROWS} added yet.
+          </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Name</TableHead>
                 {variables.map((variable) => (
                   <TableHead key={variable.id}>{variable.name}</TableHead>
                 ))}
@@ -440,6 +428,7 @@ export default function Home() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => startEditingRow(row)}
                   >
+                    <TableCell>{row.name}</TableCell>
                     {variables.map((v) => {
                       const val = row.values[v.name];
                       return (
