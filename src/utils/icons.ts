@@ -1,4 +1,4 @@
-import { LuSchool, LuSettings } from 'react-icons/lu';
+import { LuBuilding, LuSettings } from 'react-icons/lu';
 
 export enum Icons {
   Variables = 'Variables',
@@ -7,5 +7,5 @@ export enum Icons {
 
 export const ICONS = {
   [Icons.Variables]: LuSettings,
-  [Icons.Rows]: LuSchool,
+  [Icons.Rows]: LuBuilding,
 };

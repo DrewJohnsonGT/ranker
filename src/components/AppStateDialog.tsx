@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { LuSave, LuUpload } from 'react-icons/lu';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/Select';
+import { useLocalStorage } from '~/hooks/useLocalStorage';
+import { AppState, RowData, VariableDefinition } from '~/types';
 import {
   ROWS_LOCAL_STORAGE_KEY,
   SAVED_STATES_LOCAL_STORAGE_KEY,
@@ -39,60 +42,63 @@ export function AppStateDialog() {
   const [openLoadDialog, setOpenLoadDialog] = useState(false);
   const [stateName, setStateName] = useState('');
   const [selectedState, setSelectedState] = useState('');
+  const [lastLoadedState, setLastLoadedState] = useState('');
 
-  // Load current state from localStorage
+  const [variables, setVariables] = useLocalStorage<VariableDefinition[]>(
+    VARIABLES_LOCAL_STORAGE_KEY,
+    [],
+  );
+  const [rows, setRows] = useLocalStorage<RowData[]>(
+    ROWS_LOCAL_STORAGE_KEY,
+    [],
+  );
+  const [savedStates, setSavedStates] = useLocalStorage<
+    Record<string, AppState>
+  >(SAVED_STATES_LOCAL_STORAGE_KEY, {});
+
   const getCurrentState = () => {
-    const variables = localStorage.getItem(VARIABLES_LOCAL_STORAGE_KEY);
-    const rows = localStorage.getItem(ROWS_LOCAL_STORAGE_KEY);
     return {
-      variables: variables ? JSON.parse(variables) : [],
-      rows: rows ? JSON.parse(rows) : [],
+      variables,
+      rows,
     };
-  };
-
-  // Load saved states from localStorage
-  const getSavedStates = () => {
-    const savedStates = localStorage.getItem(SAVED_STATES_LOCAL_STORAGE_KEY);
-    return savedStates ? JSON.parse(savedStates) : {};
   };
 
   const handleSave = () => {
     if (!stateName) return;
 
-    const savedStates = getSavedStates();
-    savedStates[stateName] = getCurrentState();
-    localStorage.setItem(
-      SAVED_STATES_LOCAL_STORAGE_KEY,
-      JSON.stringify(savedStates),
-    );
+    const newSavedStates = {
+      ...savedStates,
+      [stateName]: getCurrentState(),
+    };
+    setSavedStates(newSavedStates);
     setStateName('');
     setOpenSaveDialog(false);
+    toast.success(`State "${stateName}" saved successfully`);
   };
 
   const handleLoad = () => {
     if (!selectedState) return;
 
-    const savedStates = getSavedStates();
     const stateToLoad = savedStates[selectedState];
 
-    localStorage.setItem(
-      VARIABLES_LOCAL_STORAGE_KEY,
-      JSON.stringify(stateToLoad.variables),
-    );
-    localStorage.setItem(
-      ROWS_LOCAL_STORAGE_KEY,
-      JSON.stringify(stateToLoad.rows),
-    );
+    setVariables(stateToLoad?.variables ?? []);
+    setRows(stateToLoad?.rows ?? []);
 
+    setLastLoadedState(selectedState);
     setSelectedState('');
     setOpenLoadDialog(false);
-    window.location.reload();
+    toast.info(`Loaded state "${selectedState}"`);
   };
 
-  const savedStatesList = Object.keys(getSavedStates());
+  const savedStatesList = Object.keys(savedStates);
 
   return (
     <div className="flex gap-2">
+      {lastLoadedState && (
+        <div className="text-sm text-muted-foreground">
+          Last loaded: {lastLoadedState}
+        </div>
+      )}
       <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
         <Button variant="outline" onClick={() => setOpenSaveDialog(true)}>
           <LuSave className="mr-2 size-4" />
@@ -117,14 +123,16 @@ export function AppStateDialog() {
       </Dialog>
 
       <AlertDialog open={openLoadDialog} onOpenChange={setOpenLoadDialog}>
-        <Button
-          variant="outline"
-          onClick={() => setOpenLoadDialog(true)}
-          disabled={savedStatesList.length === 0}
-        >
-          <LuUpload className="mr-2 size-4" />
-          Load State
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setOpenLoadDialog(true)}
+            disabled={savedStatesList.length === 0}
+          >
+            <LuUpload className="mr-2 size-4" />
+            Load State
+          </Button>
+        </div>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Load Saved State</AlertDialogTitle>

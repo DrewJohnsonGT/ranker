@@ -16,3 +16,8 @@ export interface RowData {
   scorePercentage?: number;
   relativeScorePercentage?: number;
 }
+
+export interface AppState {
+  variables: VariableDefinition[];
+  rows: RowData[];
+}

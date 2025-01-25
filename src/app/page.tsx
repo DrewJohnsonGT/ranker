@@ -76,11 +76,6 @@ const rowSchema = z.object({
   values: z.record(z.union([z.boolean(), z.number(), z.string()])),
 });
 
-export interface AppState {
-  variables: VariableDefinition[];
-  rows: RowData[];
-}
-
 export default function Home() {
   const [variables, setVariables, mountedVariables] = useLocalStorage<
     VariableDefinition[]
