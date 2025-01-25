@@ -7,7 +7,7 @@ export function computeRowScore(row: RowData, variables: VariableDefinition[]) {
       return acc + (val === true ? v.weight : 0);
     } else if (v.type === 'number') {
       const numericVal =
-        typeof val === 'number' ? val : parseFloat(val as string);
+        typeof val === 'number' ? val : parseFloat(val as string) || 0;
       return acc + numericVal * v.weight;
     }
     return acc;

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { LuCheck, LuOctagonAlert, LuX } from 'react-icons/lu';
 import z from 'zod';
@@ -91,6 +92,7 @@ export default function Home() {
       type: 'boolean',
       weight: 0,
     },
+    shouldUnregister: true,
   });
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
@@ -99,9 +101,10 @@ export default function Home() {
       name: '',
       values: {},
     },
+    shouldUnregister: true,
   });
 
-  function handleAddVariable(data: z.infer<typeof variableSchema>) {
+  const handleAddVariable = (data: z.infer<typeof variableSchema>) => {
     if (editingVariable) {
       setVariables(
         variables.map((v) =>
@@ -118,9 +121,9 @@ export default function Home() {
     }
     variableForm.reset();
     setOpenVariableDialog(false);
-  }
+  };
 
-  function handleAddRow(data: z.infer<typeof rowSchema>) {
+  const handleAddRow = (data: z.infer<typeof rowSchema>) => {
     if (editingRow) {
       // Update existing row
       setRows(
@@ -140,9 +143,25 @@ export default function Home() {
     }
     rowForm.reset();
     setOpenRowDialog(false);
-  }
+  };
 
-  function startEditingVariable(variable: VariableDefinition) {
+  const handleDeleteVariable = () => {
+    if (editingVariable) {
+      setVariables(variables.filter((v) => v.id !== editingVariable.id));
+      setEditingVariable(null);
+      setOpenVariableDialog(false);
+    }
+  };
+
+  const handleDeleteRow = () => {
+    if (editingRow) {
+      setRows(rows.filter((r) => r.id !== editingRow.id));
+      setEditingRow(null);
+      setOpenRowDialog(false);
+    }
+  };
+
+  const startEditingVariable = (variable: VariableDefinition) => {
     setEditingVariable(variable);
     variableForm.reset({
       name: variable.name,
@@ -150,20 +169,34 @@ export default function Home() {
       weight: variable.weight,
     });
     setOpenVariableDialog(true);
-  }
+  };
 
-  function startEditingRow(row: RowData) {
+  const startEditingRow = (row: RowData) => {
     setEditingRow(row);
     rowForm.reset({
       name: row.name,
       values: row.values,
     });
     setOpenRowDialog(true);
-  }
+  };
+
+  const handleVariableDialogOpenChange = (open: boolean) => {
+    setOpenVariableDialog(open);
+    if (!open) {
+      setEditingVariable(null);
+    }
+  };
 
   const sortedVariables = useMemo(() => {
     return [...variables].sort((a, b) => a.weight - b.weight);
   }, [variables]);
+
+  const maxScore = useMemo(() => {
+    return rows.reduce((acc, row) => {
+      const score = computeRowScore(row, variables);
+      return Math.max(acc, score);
+    }, 0);
+  }, [rows, variables]);
 
   const sortedRowsWithScore = useMemo(() => {
     const rowsWithScores = [...rows].map((row) => ({
@@ -196,18 +229,16 @@ export default function Home() {
     return variables.reduce((acc, v) => acc + v.weight, 0);
   }, [variables]);
 
-  const maxScore = useMemo(() => {
-    if (!sortedRowsWithScore[0]) return 0;
-    return sortedRowsWithScore[0].score;
-  }, [sortedRowsWithScore]);
-
   if (!mountedVariables || !mountedRows) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="space-y-4 p-2">
-      <Card className="max-w-lg">
+      <div className="flex items-center justify-between">
+        <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+      </div>
+      <Card className="max-w-xl">
         <CardHeader>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-semibold">
@@ -221,11 +252,11 @@ export default function Home() {
             </h2>
             <Dialog
               open={openVariableDialog}
-              onOpenChange={setOpenVariableDialog}
+              onOpenChange={handleVariableDialogOpenChange}
             >
-              <DialogTrigger asChild>
-                <Button>Add Variable</Button>
-              </DialogTrigger>
+              <Button onClick={() => setOpenVariableDialog(true)}>
+                Add Variable
+              </Button>
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>
@@ -266,8 +297,12 @@ export default function Home() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="boolean">Boolean</SelectItem>
-                              <SelectItem value="number">Number</SelectItem>
+                              <SelectItem value="boolean">
+                                True/False
+                              </SelectItem>
+                              <SelectItem value="number">
+                                Number (0-10)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -293,18 +328,31 @@ export default function Home() {
                         </FormItem>
                       )}
                     />
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setOpenVariableDialog(false);
-                          setEditingVariable(null);
-                        }}
-                        type="button"
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save</Button>
+                    <DialogFooter className="flex">
+                      {editingVariable && (
+                        <Button
+                          variant="outline"
+                          type="button"
+                          color="destructive"
+                          className="mr-auto"
+                          onClick={handleDeleteVariable}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setOpenVariableDialog(false);
+                            setEditingVariable(null);
+                          }}
+                          type="button"
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save</Button>
+                      </div>
                     </DialogFooter>
                   </form>
                 </Form>
@@ -332,7 +380,7 @@ export default function Home() {
                     {sortedVariables.map((v) => (
                       <TableRow
                         key={v.id}
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer hover:bg-muted hover:text-primary"
                         onClick={() => startEditingVariable(v)}
                       >
                         <TableCell>{v.name}</TableCell>
@@ -417,18 +465,31 @@ export default function Home() {
                         />
                       ))}
                     </div>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setOpenRowDialog(false);
-                          setEditingRow(null);
-                        }}
-                        type="button"
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save</Button>
+                    <DialogFooter className="flex">
+                      {editingRow && (
+                        <Button
+                          variant="outline"
+                          color="destructive"
+                          type="button"
+                          className="mr-auto"
+                          onClick={handleDeleteRow}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setOpenRowDialog(false);
+                            setEditingRow(null);
+                          }}
+                          type="button"
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save</Button>
+                      </div>
                     </DialogFooter>
                   </form>
                 </Form>
@@ -462,7 +523,7 @@ export default function Home() {
                       return (
                         <TableRow
                           key={row.id}
-                          className="cursor-pointer hover:bg-muted hover:text-muted-foreground"
+                          className="cursor-pointer hover:bg-muted hover:text-primary"
                           onClick={() => startEditingRow(row)}
                         >
                           <TableCell>{row.name}</TableCell>
