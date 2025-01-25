@@ -7,6 +7,12 @@ import { useForm } from 'react-hook-form';
 import { LuCheck, LuOctagonAlert, LuX } from 'react-icons/lu';
 import z from 'zod';
 import { RankedBars } from '~/components/RankedBars';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '~/components/ui/Accordion';
 import { Button } from '~/components/ui/Button';
 import { Card, CardContent, CardHeader } from '~/components/ui/Card';
 import {
@@ -35,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/Select';
+import { Separator } from '~/components/ui/Separator';
 import { Switch } from '~/components/ui/Switch';
 import {
   Table,
@@ -53,6 +60,7 @@ import {
   NAME_OF_ROW,
 } from '~/utils/constants';
 import { getValueColor } from '~/utils/getValueColor';
+import { ICONS } from '~/utils/icons';
 
 const variableSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -88,7 +96,6 @@ export default function Home() {
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
     defaultValues: {
-      name: '',
       type: 'boolean',
       weight: 0,
     },
@@ -98,7 +105,6 @@ export default function Home() {
   const rowForm = useForm<z.infer<typeof rowSchema>>({
     resolver: zodResolver(rowSchema),
     defaultValues: {
-      name: '',
       values: {},
     },
     shouldUnregister: true,
@@ -188,7 +194,7 @@ export default function Home() {
   };
 
   const sortedVariables = useMemo(() => {
-    return [...variables].sort((a, b) => a.weight - b.weight);
+    return [...variables].sort((a, b) => b.weight - a.weight);
   }, [variables]);
 
   const maxScore = useMemo(() => {
@@ -235,267 +241,272 @@ export default function Home() {
 
   return (
     <div className="space-y-4 p-2">
-      <div className="flex items-center justify-between">
-        <Image src="/logo.svg" alt="Logo" width={100} height={100} />
-      </div>
-      <Card className="max-w-xl">
-        <CardHeader>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-xl font-semibold">
-              Variables
-              {totalWeight !== 100 && (
-                <span className="flex items-center gap-1 text-base text-destructive">
-                  <LuOctagonAlert className="size-4" />
-                  Weights do not add up to 100 ({totalWeight})
-                </span>
-              )}
-            </h2>
-            <Dialog
-              open={openVariableDialog}
-              onOpenChange={handleVariableDialogOpenChange}
-            >
-              <Button onClick={() => setOpenVariableDialog(true)}>
-                Add Variable
-              </Button>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingVariable ? 'Edit Variable' : 'New Variable'}
-                  </DialogTitle>
-                </DialogHeader>
-                <Form {...variableForm}>
-                  <form
-                    onSubmit={variableForm.handleSubmit(handleAddVariable)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={variableForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={variableForm.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Type</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="boolean">
-                                True/False
-                              </SelectItem>
-                              <SelectItem value="number">
-                                Number (0-10)
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={variableForm.control}
-                      name="weight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Weight</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value) || 0)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter className="flex">
-                      {editingVariable && (
-                        <Button
-                          variant="outline"
-                          type="button"
-                          color="destructive"
-                          className="mr-auto"
-                          onClick={handleDeleteVariable}
-                        >
-                          Delete
-                        </Button>
-                      )}
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setOpenVariableDialog(false);
-                            setEditingVariable(null);
-                          }}
-                          type="button"
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit">Save</Button>
-                      </div>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex flex-col gap-4">
-            {sortedVariables.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No variables defined yet.
-              </p>
-            ) : (
-              <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Weight</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedVariables.map((v) => (
-                      <TableRow
-                        key={v.id}
-                        className="cursor-pointer hover:bg-muted hover:text-primary"
-                        onClick={() => startEditingVariable(v)}
+      <div className="flex items-center gap-2">
+        <Image src="/logo.svg" alt="Logo" width={50} height={50} />
+        <h1 className="mr-auto text-3xl font-bold">Rankings</h1>
+        <Dialog
+          open={openVariableDialog}
+          onOpenChange={handleVariableDialogOpenChange}
+        >
+          <Button onClick={() => setOpenVariableDialog(true)}>
+            Add Variable
+          </Button>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {editingVariable ? 'Edit Variable' : 'New Variable'}
+              </DialogTitle>
+            </DialogHeader>
+            <Form {...variableForm}>
+              <form
+                onSubmit={variableForm.handleSubmit(handleAddVariable)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={variableForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={variableForm.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                       >
-                        <TableCell>{v.name}</TableCell>
-                        <TableCell>
-                          {v.type === 'boolean' ? 'True/False' : 'Number'}
-                        </TableCell>
-                        <TableCell>{v.weight}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="boolean">True/False</SelectItem>
+                          <SelectItem value="number">Number (0-10)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={variableForm.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Weight</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseFloat(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter className="flex">
+                  {editingVariable && (
+                    <Button
+                      variant="outline"
+                      type="button"
+                      color="destructive"
+                      className="mr-auto"
+                      onClick={handleDeleteVariable}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setOpenVariableDialog(false);
+                        setEditingVariable(null);
+                      }}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">Save</Button>
+                  </div>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={openRowDialog} onOpenChange={setOpenRowDialog}>
+          <DialogTrigger asChild>
+            <Button>Add {NAME_OF_ROW}</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingRow ? `Edit ${NAME_OF_ROW}` : `New ${NAME_OF_ROW}`}
+              </DialogTitle>
+            </DialogHeader>
+            <Form {...rowForm}>
+              <form
+                onSubmit={rowForm.handleSubmit(handleAddRow)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={rowForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  {variables.map((variable) => (
+                    <FormField
+                      key={variable.id}
+                      control={rowForm.control}
+                      name={`values.${variable.name}`}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col gap-2">
+                          <FormLabel>{variable.name}</FormLabel>
+                          <FormControl>
+                            {variable.type === 'boolean' ? (
+                              <Switch
+                                checked={field.value === true}
+                                onCheckedChange={field.onChange}
+                              />
+                            ) : (
+                              <Input
+                                type="number"
+                                min={0}
+                                max={10}
+                                className={`max-w-[100px] ${getValueColor(Number(field.value))}`}
+                                {...field}
+                                value={field.value?.toString() ?? ''}
+                                onChange={(e) =>
+                                  field.onChange(parseInt(e.target.value))
+                                }
+                              />
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <DialogFooter className="flex">
+                  {editingRow && (
+                    <Button
+                      variant="outline"
+                      color="destructive"
+                      type="button"
+                      className="mr-auto"
+                      onClick={handleDeleteRow}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setOpenRowDialog(false);
+                        setEditingRow(null);
+                      }}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">Save</Button>
+                  </div>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <Separator className="my-4 w-full flex-1" />
+      <Accordion type="single" collapsible>
+        <AccordionItem value="variables">
+          <Card className="max-w-xl">
+            <CardHeader>
+              <AccordionTrigger className="flex w-full items-center justify-between py-0">
+                <h2 className="flex items-center gap-2 text-xl font-semibold">
+                  <ICONS.Variables className="size-6" />
+                  Variables ({variables.length})
+                  {totalWeight !== 100 && (
+                    <span className="flex items-center gap-1 text-base text-destructive">
+                      <LuOctagonAlert className="size-4" />
+                      Weights do not add up to 100 ({totalWeight})
+                    </span>
+                  )}
+                </h2>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="p-0">
+                <div className="flex flex-col gap-4">
+                  {sortedVariables.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No variables defined yet.
+                    </p>
+                  ) : (
+                    <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Weight</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sortedVariables.map((v) => (
+                            <TableRow
+                              key={v.id}
+                              className="cursor-pointer hover:bg-muted hover:text-primary"
+                              onClick={() => startEditingVariable(v)}
+                            >
+                              <TableCell>{v.name}</TableCell>
+                              <TableCell>
+                                {v.type === 'boolean' ? 'True/False' : 'Number'}
+                              </TableCell>
+                              <TableCell>{v.weight}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  )}
+                </div>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
+      </Accordion>
       <Card>
         <CardHeader>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">{NAME_OF_ROW}s</h2>
-            <Dialog open={openRowDialog} onOpenChange={setOpenRowDialog}>
-              <DialogTrigger asChild>
-                <Button>Add {NAME_OF_ROW}</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingRow ? `Edit ${NAME_OF_ROW}` : `New ${NAME_OF_ROW}`}
-                  </DialogTitle>
-                </DialogHeader>
-                <Form {...rowForm}>
-                  <form
-                    onSubmit={rowForm.handleSubmit(handleAddRow)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={rowForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      {variables.map((variable) => (
-                        <FormField
-                          key={variable.id}
-                          control={rowForm.control}
-                          name={`values.${variable.name}`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col gap-2">
-                              <FormLabel>{variable.name}</FormLabel>
-                              <FormControl>
-                                {variable.type === 'boolean' ? (
-                                  <Switch
-                                    checked={field.value === true}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                ) : (
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={10}
-                                    className={`max-w-[100px] ${getValueColor(Number(field.value))}`}
-                                    {...field}
-                                    value={field.value?.toString() ?? ''}
-                                    onChange={(e) =>
-                                      field.onChange(parseInt(e.target.value))
-                                    }
-                                  />
-                                )}
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <DialogFooter className="flex">
-                      {editingRow && (
-                        <Button
-                          variant="outline"
-                          color="destructive"
-                          type="button"
-                          className="mr-auto"
-                          onClick={handleDeleteRow}
-                        >
-                          Delete
-                        </Button>
-                      )}
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setOpenRowDialog(false);
-                            setEditingRow(null);
-                          }}
-                          type="button"
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit">Save</Button>
-                      </div>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <ICONS.Rows className="size-6" />
+            {NAME_OF_ROW}s
+          </h2>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex flex-col gap-4">

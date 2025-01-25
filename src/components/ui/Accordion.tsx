@@ -20,7 +20,7 @@ const AccordionTrigger: React.FC<
   <AccordionPrimitive.Header className="flex">
     <AccordionPrimitive.Trigger
       className={cn(
-        'flex flex-1 items-center justify-between p-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180',
+        'flex flex-1 items-center justify-between font-medium transition-all hover:text-primary [&[data-state=open]>svg]:rotate-180',
         className,
       )}
       {...props}
@@ -39,7 +39,7 @@ const AccordionContent: React.FC<
     className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
     {...props}
   >
-    <div className={cn('pb-2 pt-0', className)}>{children}</div>
+    <div className={cn('pt-0', className)}>{children}</div>
   </AccordionPrimitive.Content>
 );
 

@@ -1,7 +1,13 @@
+import { Metadata } from 'next';
 import { Lato } from 'next/font/google';
 import { TooltipProvider } from '~/components/ui/Tooltip';
 
 import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'Rankings',
+  description: 'Rankings',
+};
 
 const font = Lato({
   subsets: ['latin'],
