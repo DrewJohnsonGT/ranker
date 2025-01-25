@@ -75,7 +75,9 @@ const variableSchema = z.object({
 
 const rowSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  values: z.record(z.union([z.boolean(), z.number(), z.string()])),
+  values: z
+    .record(z.union([z.boolean(), z.number(), z.string(), z.null()]).optional())
+    .optional(),
 });
 
 export default function Home() {
@@ -102,6 +104,7 @@ export default function Home() {
 
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
+    shouldUnregister: true,
   });
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
@@ -109,6 +112,7 @@ export default function Home() {
     defaultValues: {
       values: {},
     },
+    shouldUnregister: true,
   });
 
   const handleAddVariable = (data: z.infer<typeof variableSchema>) => {
@@ -137,7 +141,7 @@ export default function Home() {
       // Update existing row
       setRows(
         rows.map((r) =>
-          r.id === editingRow.id ? { ...r, values: data.values } : r,
+          r.id === editingRow.id ? { ...r, values: data.values ?? {} } : r,
         ),
       );
       setEditingRow(null);
@@ -147,7 +151,7 @@ export default function Home() {
       const row: RowData = {
         id: crypto.randomUUID(),
         name: data.name,
-        values: data.values,
+        values: data.values ?? {},
       };
       setRows([...rows, row]);
       toast.success(`${NAME_OF_ROW} added successfully`);
@@ -451,162 +455,166 @@ export default function Home() {
         </Dialog>
       </div>
       <Separator className="w-full flex-1" />
-      <div className="flex flex-wrap gap-2 p-2">
-        <Accordion type="single" className="min-w-96 flex-1" collapsible>
-          <AccordionItem value="variables">
-            <Card className="max-w-xl">
-              <CardHeader>
-                <AccordionTrigger className="flex w-full items-center justify-between py-0">
-                  <h2 className="flex items-center gap-2 text-xl font-semibold">
-                    <ICONS.Variables className="size-6" />
-                    Variables ({variables.length})
-                    {totalWeight !== 100 && (
-                      <span className="flex items-center gap-1 text-base text-destructive">
-                        <LuOctagonAlert className="size-4" />
-                        Weights do not add up to 100 ({totalWeight})
-                      </span>
-                    )}
-                  </h2>
-                </AccordionTrigger>
-              </CardHeader>
-              <AccordionContent>
-                <CardContent className="p-0">
-                  <div className="flex flex-col gap-4">
-                    {sortedVariables.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        No variables defined yet.
-                      </p>
-                    ) : (
-                      <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Name</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Weight</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {sortedVariables.map((v) => (
-                              <TableRow
-                                key={v.id}
-                                className="cursor-pointer hover:bg-muted hover:text-primary"
-                                onClick={() => startEditingVariable(v)}
-                              >
-                                <TableCell>{v.name}</TableCell>
-                                <TableCell>
-                                  {v.type === 'boolean'
-                                    ? 'True/False'
-                                    : 'Number'}
-                                </TableCell>
-                                <TableCell>{v.weight}</TableCell>
+      <ScrollArea className="flex-1">
+        <div className="flex flex-wrap gap-2 p-2">
+          <Accordion type="single" className="min-w-96 flex-1" collapsible>
+            <AccordionItem value="variables">
+              <Card className="max-w-xl">
+                <CardHeader>
+                  <AccordionTrigger className="flex w-full items-center justify-between py-0">
+                    <h2 className="flex items-center gap-2 text-xl font-semibold">
+                      <ICONS.Variables className="size-6" />
+                      Variables ({variables.length})
+                      {totalWeight !== 100 && (
+                        <span className="flex items-center gap-1 text-base text-destructive">
+                          <LuOctagonAlert className="size-4" />
+                          Weights do not add up to 100 ({totalWeight})
+                        </span>
+                      )}
+                    </h2>
+                  </AccordionTrigger>
+                </CardHeader>
+                <AccordionContent>
+                  <CardContent className="p-0">
+                    <div className="flex flex-col gap-4">
+                      {sortedVariables.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No variables defined yet.
+                        </p>
+                      ) : (
+                        <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Weight</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </ScrollArea>
-                    )}
-                  </div>
-                </CardContent>
-              </AccordionContent>
-            </Card>
-          </AccordionItem>
-        </Accordion>
-        <Card>
-          <CardHeader>
-            <h2 className="flex items-center gap-2 text-xl font-semibold">
-              <ICONS.Rows className="size-6" />
-              {NAME_OF_ROW}s
-            </h2>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-4">
-              {sortedRowsWithScore.length === 0 ? (
-                <p className="m-auto p-4 text-sm text-muted-foreground">
-                  No {NAME_OF_ROW}s added yet.
-                </p>
-              ) : (
-                <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Rank</TableHead>
-                        <TableHead>Name</TableHead>
-                        {variables.map((variable) => (
-                          <TableHead key={variable.id}>
-                            {variable.name}
-                          </TableHead>
-                        ))}
-                        <TableHead>Score</TableHead>
-                        <TableHead>Score %</TableHead>
-                        <TableHead>Relative Score %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedRowsWithScore.map((row, index) => {
-                        const score = row.score;
-                        return (
-                          <TableRow
-                            key={row.id}
-                            className="cursor-pointer hover:bg-muted hover:text-primary"
-                            onClick={() => startEditingRow(row)}
-                          >
-                            <TableCell>
-                              {index === 0 && (
-                                <FaMedal className="text-yellow-500" />
-                              )}
-                              {index === 1 && (
-                                <FaMedal className="text-gray-400" />
-                              )}
-                              {index === 2 && (
-                                <FaMedal className="text-amber-600" />
-                              )}
-                              {index > 2 && index + 1}
-                            </TableCell>
-                            <TableCell>{row.name}</TableCell>
-                            {variables.map((v) => {
-                              const val = row.values[v.name];
-                              return (
-                                <TableCell key={v.id}>
-                                  {v.type === 'boolean' ? (
-                                    <span
-                                      className={
-                                        val ? 'text-rank-high' : 'text-rank-low'
-                                      }
-                                    >
-                                      {val ? <LuCheck /> : <LuX />}
-                                    </span>
-                                  ) : (
-                                    <span
-                                      className={getValueColor(Number(val))}
-                                    >
-                                      {val}
-                                    </span>
-                                  )}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell>{score.toFixed(2)}</TableCell>
-                            <TableCell>
-                              {row.scorePercentage?.toFixed(1)}%
-                            </TableCell>
-                            <TableCell>
-                              {row.relativeScorePercentage?.toFixed(1)}%
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        {sortedRowsWithScore.length > 0 && (
-          <RankedBars rows={sortedRowsWithScore} maxScore={maxScore} />
-        )}
-      </div>
+                            </TableHeader>
+                            <TableBody>
+                              {sortedVariables.map((v) => (
+                                <TableRow
+                                  key={v.id}
+                                  className="cursor-pointer hover:bg-muted hover:text-primary"
+                                  onClick={() => startEditingVariable(v)}
+                                >
+                                  <TableCell>{v.name}</TableCell>
+                                  <TableCell>
+                                    {v.type === 'boolean'
+                                      ? 'True/False'
+                                      : 'Number'}
+                                  </TableCell>
+                                  <TableCell>{v.weight}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </ScrollArea>
+                      )}
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
+          </Accordion>
+          <Card>
+            <CardHeader>
+              <h2 className="flex items-center gap-2 text-xl font-semibold">
+                <ICONS.Rows className="size-6" />
+                {NAME_OF_ROW}s
+              </h2>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="flex flex-col gap-4">
+                {sortedRowsWithScore.length === 0 ? (
+                  <p className="m-auto p-4 text-sm text-muted-foreground">
+                    No {NAME_OF_ROW}s added yet.
+                  </p>
+                ) : (
+                  <ScrollArea className="min-h-0 rounded-b-md border-b bg-background">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Rank</TableHead>
+                          <TableHead>Name</TableHead>
+                          {variables.map((variable) => (
+                            <TableHead key={variable.id}>
+                              {variable.name}
+                            </TableHead>
+                          ))}
+                          <TableHead>Score</TableHead>
+                          <TableHead>Score %</TableHead>
+                          <TableHead>Relative Score %</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedRowsWithScore.map((row, index) => {
+                          const score = row.score;
+                          return (
+                            <TableRow
+                              key={row.id}
+                              className="cursor-pointer hover:bg-muted hover:text-primary"
+                              onClick={() => startEditingRow(row)}
+                            >
+                              <TableCell>
+                                {index === 0 && (
+                                  <FaMedal className="text-yellow-500" />
+                                )}
+                                {index === 1 && (
+                                  <FaMedal className="text-gray-400" />
+                                )}
+                                {index === 2 && (
+                                  <FaMedal className="text-amber-600" />
+                                )}
+                                {index > 2 && index + 1}
+                              </TableCell>
+                              <TableCell>{row.name}</TableCell>
+                              {variables.map((v) => {
+                                const val = row.values[v.name];
+                                return (
+                                  <TableCell key={v.id}>
+                                    {v.type === 'boolean' ? (
+                                      <span
+                                        className={
+                                          val
+                                            ? 'text-rank-high'
+                                            : 'text-rank-low'
+                                        }
+                                      >
+                                        {val ? <LuCheck /> : <LuX />}
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={getValueColor(Number(val))}
+                                      >
+                                        {val}
+                                      </span>
+                                    )}
+                                  </TableCell>
+                                );
+                              })}
+                              <TableCell>{score.toFixed(2)}</TableCell>
+                              <TableCell>
+                                {row.scorePercentage?.toFixed(1)}%
+                              </TableCell>
+                              <TableCell>
+                                {row.relativeScorePercentage?.toFixed(1)}%
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          {sortedRowsWithScore.length > 0 && (
+            <RankedBars rows={sortedRowsWithScore} maxScore={maxScore} />
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

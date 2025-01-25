@@ -32,6 +32,8 @@ import {
 import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { AppState, RowData, VariableDefinition } from '~/types';
 import {
+  DEFAULT_ROWS,
+  DEFAULT_VARIABLES,
   LAST_LOADED_STATE_LOCAL_STORAGE_KEY,
   ROWS_LOCAL_STORAGE_KEY,
   SAVED_STATES_LOCAL_STORAGE_KEY,
@@ -44,23 +46,28 @@ export function AppStateDialog() {
   const [stateName, setStateName] = useState('');
   const [selectedState, setSelectedState] = useState('');
 
-  const { value: variables, setValue: setVariables } = useLocalStorage<
+  const { setValue: setVariables, getValue: getVariables } = useLocalStorage<
     VariableDefinition[]
-  >(VARIABLES_LOCAL_STORAGE_KEY, []);
-  const { value: rows, setValue: setRows } = useLocalStorage<RowData[]>(
+  >(VARIABLES_LOCAL_STORAGE_KEY, DEFAULT_VARIABLES);
+  const { setValue: setRows, getValue: getRows } = useLocalStorage<RowData[]>(
     ROWS_LOCAL_STORAGE_KEY,
-    [],
+    DEFAULT_ROWS,
   );
   const { value: lastLoadedState, setValue: setLastLoadedState } =
     useLocalStorage<string>(LAST_LOADED_STATE_LOCAL_STORAGE_KEY, '');
-  const { value: savedStates, setValue: setSavedStates } = useLocalStorage<
-    Record<string, AppState>
-  >(SAVED_STATES_LOCAL_STORAGE_KEY, {});
+
+  const { setValue: setSavedStates, getValue: getSavedStates } =
+    useLocalStorage<Record<string, AppState>>(SAVED_STATES_LOCAL_STORAGE_KEY, {
+      DEFAULT: {
+        variables: DEFAULT_VARIABLES,
+        rows: DEFAULT_ROWS,
+      },
+    });
 
   const getCurrentState = () => {
     return {
-      variables,
-      rows,
+      variables: getVariables(),
+      rows: getRows(),
     };
   };
 
@@ -68,7 +75,7 @@ export function AppStateDialog() {
     if (!stateName) return;
 
     const newSavedStates = {
-      ...savedStates,
+      ...getSavedStates(),
       [stateName]: getCurrentState(),
     };
     setSavedStates(newSavedStates);
@@ -80,7 +87,7 @@ export function AppStateDialog() {
   const handleLoad = () => {
     if (!selectedState) return;
 
-    const stateToLoad = savedStates[selectedState];
+    const stateToLoad = getSavedStates()[selectedState];
 
     setVariables(stateToLoad?.variables ?? []);
     setRows(stateToLoad?.rows ?? []);
@@ -91,7 +98,7 @@ export function AppStateDialog() {
     window.location.reload();
   };
 
-  const savedStatesList = Object.keys(savedStates);
+  const savedStatesList = Object.keys(getSavedStates());
 
   return (
     <div className="flex items-center gap-2">

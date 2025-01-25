@@ -10,7 +10,7 @@ export interface VariableDefinition {
 export interface RowData {
   id: string;
   name: string;
-  values: Record<string, boolean | number | string>;
+  values: Partial<Record<string, boolean | number | string | null>>;
   rank?: number;
   score?: number;
   scorePercentage?: number;
