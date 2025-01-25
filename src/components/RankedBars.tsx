@@ -38,13 +38,13 @@ export function RankedBars({ rows, maxScore }: RankedBarsProps) {
   const chartData = rows.map((row, index) => ({
     name: row.name,
     score: Number((row.score || 0).toFixed(2)),
-    fill: `var(--chart-color-${(index % 10) + 1})`, // Cycle through chart colors 1-10
+    fill: `var(--chart-color-${(index % 10) + 1})`,
   }));
 
   return (
-    <Card className="max-w-xl p-4">
+    <Card className="min-w-96 max-w-xl flex-1 px-2">
       <CardHeader>
-        <CardTitle>{NAME_OF_ROW} Rankings</CardTitle>
+        <CardTitle className="text-2xl">{NAME_OF_ROW} Rankings</CardTitle>
         <CardDescription>Sorted by score</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -57,7 +57,7 @@ export function RankedBars({ rows, maxScore }: RankedBarsProps) {
             <XAxis
               type="number"
               domain={[0, maxScore]}
-              tickFormatter={(value) => ''}
+              tickFormatter={() => ''}
               tickLine={false}
               axisLine={false}
             />

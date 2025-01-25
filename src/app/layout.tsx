@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={font.className}>
         <TooltipProvider>
-          <NextThemesProvider attribute="class" defaultTheme="system">
+          <NextThemesProvider attribute="class" defaultTheme="light">
             {children}
             <Toaster />
           </NextThemesProvider>

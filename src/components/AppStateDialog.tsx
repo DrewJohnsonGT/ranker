@@ -32,6 +32,7 @@ import {
 import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { AppState, RowData, VariableDefinition } from '~/types';
 import {
+  LAST_LOADED_STATE_LOCAL_STORAGE_KEY,
   ROWS_LOCAL_STORAGE_KEY,
   SAVED_STATES_LOCAL_STORAGE_KEY,
   VARIABLES_LOCAL_STORAGE_KEY,
@@ -42,17 +43,17 @@ export function AppStateDialog() {
   const [openLoadDialog, setOpenLoadDialog] = useState(false);
   const [stateName, setStateName] = useState('');
   const [selectedState, setSelectedState] = useState('');
-  const [lastLoadedState, setLastLoadedState] = useState('');
 
-  const [variables, setVariables] = useLocalStorage<VariableDefinition[]>(
-    VARIABLES_LOCAL_STORAGE_KEY,
-    [],
-  );
-  const [rows, setRows] = useLocalStorage<RowData[]>(
+  const { value: variables, setValue: setVariables } = useLocalStorage<
+    VariableDefinition[]
+  >(VARIABLES_LOCAL_STORAGE_KEY, []);
+  const { value: rows, setValue: setRows } = useLocalStorage<RowData[]>(
     ROWS_LOCAL_STORAGE_KEY,
     [],
   );
-  const [savedStates, setSavedStates] = useLocalStorage<
+  const { value: lastLoadedState, setValue: setLastLoadedState } =
+    useLocalStorage<string>(LAST_LOADED_STATE_LOCAL_STORAGE_KEY, '');
+  const { value: savedStates, setValue: setSavedStates } = useLocalStorage<
     Record<string, AppState>
   >(SAVED_STATES_LOCAL_STORAGE_KEY, {});
 
@@ -83,17 +84,17 @@ export function AppStateDialog() {
 
     setVariables(stateToLoad?.variables ?? []);
     setRows(stateToLoad?.rows ?? []);
-
     setLastLoadedState(selectedState);
     setSelectedState('');
     setOpenLoadDialog(false);
     toast.info(`Loaded state "${selectedState}"`);
+    window.location.reload();
   };
 
   const savedStatesList = Object.keys(savedStates);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-2">
       {lastLoadedState && (
         <div className="text-sm text-muted-foreground">
           Last loaded: {lastLoadedState}

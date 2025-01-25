@@ -3,7 +3,12 @@ import { useEffect, useState } from 'react';
 export const useLocalStorage = <T>(
   key: string,
   initialValue: T,
-): [T, (value: T) => void, boolean] => {
+): {
+  value: T;
+  setValue: (value: T) => void;
+  getValue: () => T;
+  mounted: boolean;
+} => {
   const [mounted, setMounted] = useState(false);
   const [storedValue, setStoredValue] = useState<T>(initialValue);
 
@@ -12,6 +17,8 @@ export const useLocalStorage = <T>(
       const item = window.localStorage.getItem(key);
       if (item) {
         setStoredValue(JSON.parse(item));
+      } else {
+        window.localStorage.setItem(key, JSON.stringify(initialValue));
       }
     } catch (error) {
       console.log(error);
@@ -32,5 +39,20 @@ export const useLocalStorage = <T>(
     }
   };
 
-  return [storedValue, setValue, mounted];
+  const getValue = () => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.log(error);
+      return initialValue;
+    }
+  };
+
+  return {
+    value: storedValue,
+    setValue,
+    getValue,
+    mounted,
+  };
 };
