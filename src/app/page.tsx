@@ -60,6 +60,7 @@ import { computeRowScore } from '~/utils/computeRowScore';
 import {
   DEFAULT_ROWS,
   DEFAULT_VARIABLES,
+  MAX_VARIABLE_NUMERICAL_VALUE,
   NAME_OF_ROW,
   ROWS_LOCAL_STORAGE_KEY,
   VARIABLES_LOCAL_STORAGE_KEY,
@@ -104,15 +105,19 @@ export default function Home() {
 
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
-    shouldUnregister: true,
+    defaultValues: {
+      name: '',
+      type: 'number',
+      weight: 0,
+    },
   });
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
     resolver: zodResolver(rowSchema),
     defaultValues: {
+      name: '',
       values: {},
     },
-    shouldUnregister: true,
   });
 
   const handleAddVariable = (data: z.infer<typeof variableSchema>) => {
@@ -141,7 +146,9 @@ export default function Home() {
       // Update existing row
       setRows(
         rows.map((r) =>
-          r.id === editingRow.id ? { ...r, values: data.values ?? {} } : r,
+          r.id === editingRow.id
+            ? { ...r, values: data.values ?? {}, name: data.name }
+            : r,
         ),
       );
       setEditingRow(null);
@@ -192,7 +199,7 @@ export default function Home() {
     setEditingRow(row);
     rowForm.reset({
       name: row.name,
-      values: row.values,
+      values: row.values ?? {},
     });
     setOpenRowDialog(true);
   };
@@ -225,7 +232,11 @@ export default function Home() {
       if (v.type === 'boolean') {
         return acc + v.weight;
       } else if (v.type === 'number') {
-        return acc + 10 * v.weight;
+        return (
+          acc +
+          (MAX_VARIABLE_NUMERICAL_VALUE / MAX_VARIABLE_NUMERICAL_VALUE) *
+            v.weight
+        );
       }
       return acc;
     }, 0);
@@ -304,7 +315,9 @@ export default function Home() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="boolean">True/False</SelectItem>
-                          <SelectItem value="number">Number (0-10)</SelectItem>
+                          <SelectItem value="number">
+                            Number (0-{MAX_VARIABLE_NUMERICAL_VALUE})
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -407,7 +420,7 @@ export default function Home() {
                               <Input
                                 type="number"
                                 min={0}
-                                max={10}
+                                max={MAX_VARIABLE_NUMERICAL_VALUE}
                                 className={`max-w-[100px] ${getValueColor(Number(field.value))}`}
                                 {...field}
                                 value={field.value?.toString() ?? ''}

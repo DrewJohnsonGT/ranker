@@ -7,6 +7,8 @@ export const ROWS_LOCAL_STORAGE_KEY = 'rows';
 export const SAVED_STATES_LOCAL_STORAGE_KEY = 'savedStates';
 export const LAST_LOADED_STATE_LOCAL_STORAGE_KEY = 'lastLoadedState';
 
+export const MAX_VARIABLE_NUMERICAL_VALUE = 10;
+
 export const DEFAULT_VARIABLES: VariableDefinition[] = [
   {
     id: crypto.randomUUID(),
