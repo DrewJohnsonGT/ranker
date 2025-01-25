@@ -78,7 +78,7 @@ export function RankedBars({ rows, maxScore }: RankedBarsProps) {
         <div className="flex gap-2 font-medium leading-none">
           {rows[0]?.name} is ranked highest with {rows[0]?.score?.toFixed(1)}{' '}
           points
-          <LuTrendingUp className="h-4 w-4" />
+          <LuTrendingUp className="size-4" />
         </div>
         <div className="leading-none text-muted-foreground">
           Showing rankings for {rows.length} {NAME_OF_ROW}s
