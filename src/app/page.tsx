@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { LuCheck, LuOctagonAlert, LuX } from 'react-icons/lu';
 import z from 'zod';
+import { AppStateDialog } from '~/components/AppStateDialog';
 import { RankedBars } from '~/components/RankedBars';
 import {
   Accordion,
@@ -58,6 +59,8 @@ import {
   DEFAULT_ROWS,
   DEFAULT_VARIABLES,
   NAME_OF_ROW,
+  ROWS_LOCAL_STORAGE_KEY,
+  VARIABLES_LOCAL_STORAGE_KEY,
 } from '~/utils/constants';
 import { getValueColor } from '~/utils/getValueColor';
 import { ICONS } from '~/utils/icons';
@@ -81,9 +84,9 @@ export interface AppState {
 export default function Home() {
   const [variables, setVariables, mountedVariables] = useLocalStorage<
     VariableDefinition[]
-  >('variables', DEFAULT_VARIABLES);
+  >(VARIABLES_LOCAL_STORAGE_KEY, DEFAULT_VARIABLES);
   const [rows, setRows, mountedRows] = useLocalStorage<RowData[]>(
-    'rows',
+    ROWS_LOCAL_STORAGE_KEY,
     DEFAULT_ROWS,
   );
 
@@ -95,11 +98,6 @@ export default function Home() {
 
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
-    defaultValues: {
-      type: 'boolean',
-      weight: 0,
-    },
-    shouldUnregister: true,
   });
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
@@ -107,7 +105,6 @@ export default function Home() {
     defaultValues: {
       values: {},
     },
-    shouldUnregister: true,
   });
 
   const handleAddVariable = (data: z.infer<typeof variableSchema>) => {
@@ -244,6 +241,7 @@ export default function Home() {
       <div className="flex items-center gap-2">
         <Image src="/logo.svg" alt="Logo" width={50} height={50} />
         <h1 className="mr-auto text-3xl font-bold">Rankings</h1>
+        <AppStateDialog />
         <Dialog
           open={openVariableDialog}
           onOpenChange={handleVariableDialogOpenChange}
@@ -511,7 +509,7 @@ export default function Home() {
         <CardContent className="p-0">
           <div className="flex flex-col gap-4">
             {sortedRowsWithScore.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="m-auto p-4 text-sm text-muted-foreground">
                 No {NAME_OF_ROW}s added yet.
               </p>
             ) : (
@@ -575,7 +573,9 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
-      <RankedBars rows={sortedRowsWithScore} maxScore={maxScore} />
+      {sortedRowsWithScore.length > 0 && (
+        <RankedBars rows={sortedRowsWithScore} maxScore={maxScore} />
+      )}
     </div>
   );
 }
