@@ -26,6 +26,7 @@ export function useLocalStorageState<T>(
   // We use lazy initialization so it only runs once.
   const [value, setValue] = useState<T>(() => {
     try {
+      if (typeof window === 'undefined') return initialValue;
       const storedItem = window.localStorage.getItem(key);
       return storedItem ? JSON.parse(storedItem) : initialValue;
     } catch (error) {
@@ -41,6 +42,7 @@ export function useLocalStorageState<T>(
 
   // Whenever value changes, save it to localStorage.
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
