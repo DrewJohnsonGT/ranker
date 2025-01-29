@@ -16,4 +16,8 @@ export function computeRowScore(row: RowData, variables: VariableDefinition[]) {
 }
 
 
-export const computeMaxRowScore
+export const computeMaxRowScore = (rows: RowData[], variables: VariableDefinition[]) => {
+  return rows.reduce((acc, row) => {
+    return Math.max(acc, computeRowScore(row, variables));
+  }, 0);
+};

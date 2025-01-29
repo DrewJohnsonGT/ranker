@@ -35,25 +35,24 @@ import {
   DEFAULT_ROWS,
   DEFAULT_VARIABLES,
   LAST_LOADED_STATE_LOCAL_STORAGE_KEY,
-  ROWS_LOCAL_STORAGE_KEY,
   SAVED_STATES_LOCAL_STORAGE_KEY,
-  VARIABLES_LOCAL_STORAGE_KEY,
 } from '~/utils/constants';
 
-export function AppStateDialog() {
+export function AppStateDialog({
+  variables,
+  rows,
+  setVariables,
+  setRows,
+}: {
+  variables: VariableDefinition[];
+  rows: RowData[];
+  setVariables: (variables: VariableDefinition[]) => void;
+  setRows: (rows: RowData[]) => void;
+}) {
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLoadDialog, setOpenLoadDialog] = useState(false);
   const [stateName, setStateName] = useState('');
   const [selectedState, setSelectedState] = useState('');
-
-  const [variables, setVariables] = useLocalStorageState<VariableDefinition[]>(
-    VARIABLES_LOCAL_STORAGE_KEY,
-    DEFAULT_VARIABLES,
-  );
-  const [rows, setRows] = useLocalStorageState<RowData[]>(
-    ROWS_LOCAL_STORAGE_KEY,
-    DEFAULT_ROWS,
-  );
   const [lastLoadedState, setLastLoadedState] = useLocalStorageState<string>(
     LAST_LOADED_STATE_LOCAL_STORAGE_KEY,
     '',

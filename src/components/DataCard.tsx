@@ -20,7 +20,6 @@ import {
   FormMessage,
 } from './ui/Form';
 import { Input } from './ui/Input';
-import { LoadingSpinner } from './ui/LoadingSpinner';
 import { ScrollArea } from './ui/ScrollArea';
 import {
   Table,
@@ -37,15 +36,12 @@ import { FaMedal } from 'react-icons/fa';
 import { LuPencil } from 'react-icons/lu';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { useLocalStorageState } from '~/hooks/useLocalStorageState';
 import { RowData, VariableDefinition } from '~/types';
 import { computeRowScore } from '~/utils/computeRowScore';
 import {
   MAX_VARIABLE_NUMERICAL_VALUE,
   NAME_OF_ROW,
   OPEN_ROW_DIALOG_QUERY_KEY,
-  ROWS_LOCAL_STORAGE_KEY,
-  VARIABLES_LOCAL_STORAGE_KEY,
 } from '~/utils/constants';
 import { getValueColor } from '~/utils/getValueColor';
 import { ICONS } from '~/utils/icons';
@@ -57,16 +53,15 @@ const rowSchema = z.object({
     .optional(),
 });
 
-export function DataCard() {
-  const [variables, , mountedVariables] = useLocalStorageState<
-    VariableDefinition[]
-  >(VARIABLES_LOCAL_STORAGE_KEY, []);
-
-  const [rows, setRows, mountedRows] = useLocalStorageState<RowData[]>(
-    ROWS_LOCAL_STORAGE_KEY,
-    [],
-  );
-
+export function DataCard({
+  rows,
+  setRows,
+  variables,
+}: {
+  rows: RowData[];
+  setRows: (rows: RowData[]) => void;
+  variables: VariableDefinition[];
+}) {
   const [openRowDialog, setOpenRowDialog] = useQueryState(
     OPEN_ROW_DIALOG_QUERY_KEY,
     parseAsBoolean.withDefault(false),
@@ -176,10 +171,6 @@ export function DataCard() {
       }))
       .sort((a, b) => b.score - a.score);
   }, [rows, variables]);
-
-  if (!mountedVariables || !mountedRows) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <>

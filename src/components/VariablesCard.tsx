@@ -47,11 +47,9 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/Table';
-import { useLocalStorageState } from '~/hooks/useLocalStorageState';
 import { VariableDefinition } from '~/types';
 import {
   MAX_VARIABLE_NUMERICAL_VALUE,
-  VARIABLES_LOCAL_STORAGE_KEY,
   OPEN_VARIABLE_DIALOG_QUERY_KEY,
 } from '~/utils/constants';
 import { ICONS } from '~/utils/icons';
@@ -62,11 +60,13 @@ const variableSchema = z.object({
   weight: z.number().min(0),
 });
 
-export function VariablesCard() {
-  const [variables, setVariables] = useLocalStorageState<VariableDefinition[]>(
-    VARIABLES_LOCAL_STORAGE_KEY,
-    [],
-  );
+export function VariablesCard({
+  variables,
+  setVariables,
+}: {
+  variables: VariableDefinition[];
+  setVariables: (variables: VariableDefinition[]) => void;
+}) {
   const [openVariableDialog, setOpenVariableDialog] = useQueryState(
     OPEN_VARIABLE_DIALOG_QUERY_KEY,
     parseAsBoolean.withDefault(false),
@@ -203,9 +203,6 @@ export function VariablesCard() {
         open={openVariableDialog}
         onOpenChange={handleVariableDialogOpenChange}
       >
-        <Button onClick={() => setOpenVariableDialog(true)}>
-          Add Variable
-        </Button>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>

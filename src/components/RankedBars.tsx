@@ -16,13 +16,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '~/components/ui/Chart';
-import { RowData } from '~/types';
+import { RowData, VariableDefinition } from '~/types';
+import { computeMaxRowScore, computeRowScore } from '~/utils/computeRowScore';
 import { NAME_OF_ROW } from '~/utils/constants';
-
-interface RankedBarsProps {
-  rows: RowData[];
-  maxScore: number;
-}
 
 const chartConfig = {
   score: {
@@ -34,8 +30,24 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function RankedBars({ rows, maxScore }: RankedBarsProps) {
-  const chartData = rows.map((row, index) => ({
+export function RankedBars({
+  rows,
+  variables,
+}: {
+  rows: RowData[];
+  variables: VariableDefinition[];
+}) {
+  // Calculate scores for each row
+  const rowsWithScores = rows
+    .map((row) => ({
+      ...row,
+      score: computeRowScore(row, variables),
+    }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  const maxScore = computeMaxRowScore(rows, variables);
+
+  const chartData = rowsWithScores.map((row, index) => ({
     name: row.name,
     score: Number((row.score || 0).toFixed(2)),
     fill: `var(--chart-color-${(index % 10) + 1})`,
@@ -52,7 +64,7 @@ export function RankedBars({ rows, maxScore }: RankedBarsProps) {
           <BarChart
             data={chartData}
             layout="vertical"
-            height={rows.length * 50}
+            height={rowsWithScores.length * 50}
           >
             <XAxis
               type="number"
@@ -76,12 +88,12 @@ export function RankedBars({ rows, maxScore }: RankedBarsProps) {
       </CardContent>
       <CardFooter className="flex-col items-center gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-          {rows[0]?.name} is ranked highest with {rows[0]?.score?.toFixed(1)}{' '}
-          points
+          {rowsWithScores[0]?.name} is ranked highest with{' '}
+          {rowsWithScores[0]?.score?.toFixed(1)} points
           <LuTrendingUp className="size-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing rankings for {rows.length} {NAME_OF_ROW}s
+          Showing rankings for {rowsWithScores.length} {NAME_OF_ROW}s
         </div>
       </CardFooter>
     </Card>
