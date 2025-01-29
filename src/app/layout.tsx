@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { Lato } from 'next/font/google';
@@ -26,7 +27,9 @@ export default function RootLayout({
       <body className={font.className}>
         <TooltipProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">
-            <NuqsAdapter>{children}</NuqsAdapter>
+            <NuqsAdapter>
+              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            </NuqsAdapter>
             <Toaster />
           </NextThemesProvider>
         </TooltipProvider>
