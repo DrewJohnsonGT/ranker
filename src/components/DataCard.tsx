@@ -33,7 +33,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useForm } from 'react-hook-form';
 import { FaMedal } from 'react-icons/fa';
-import { LuPencil } from 'react-icons/lu';
+import { LuArrowDownUp, LuPencil } from 'react-icons/lu';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { RowData, VariableDefinition } from '~/types';
@@ -67,6 +67,7 @@ export function DataCard({
     parseAsBoolean.withDefault(false),
   );
   const [editingRow, setEditingRow] = useState<RowData | null>(null);
+  const [isSorted, setIsSorted] = useState(false);
 
   const rowForm = useForm<z.infer<typeof rowSchema>>({
     resolver: zodResolver(rowSchema),
@@ -141,7 +142,7 @@ export function DataCard({
     );
   };
 
-  const sortedRowsWithScore = useMemo(() => {
+  const rowsWithScore = useMemo(() => {
     const rowsWithScores = [...rows].map((row) => ({
       ...row,
       score: computeRowScore(row, variables),
@@ -160,17 +161,30 @@ export function DataCard({
       return acc;
     }, 0);
 
-    return rowsWithScores
-      .map((row) => ({
-        ...row,
-        scorePercentage:
-          totalPossibleScore > 0 ? (row.score / totalPossibleScore) * 100 : 0,
-        relativeScorePercentage: rowsWithScores[0]?.score
-          ? (row.score / rowsWithScores[0].score) * 100
-          : 0,
-      }))
-      .sort((a, b) => b.score - a.score);
+    const withPercentages = rowsWithScores.map((row) => ({
+      ...row,
+      scorePercentage:
+        totalPossibleScore > 0 ? (row.score / totalPossibleScore) * 100 : 0,
+      relativeScorePercentage: rowsWithScores[0]?.score
+        ? (row.score / rowsWithScores[0].score) * 100
+        : 0,
+    }));
+
+    return withPercentages;
   }, [rows, variables]);
+
+  const displayedRows = useMemo(() => {
+    if (isSorted) {
+      return [...rowsWithScore].sort((a, b) => b.score - a.score);
+    }
+    return rowsWithScore;
+  }, [rowsWithScore, isSorted]);
+
+  const getRankInfo = (row: (typeof rowsWithScore)[0]) => {
+    const sortedScores = [...rowsWithScore].sort((a, b) => b.score - a.score);
+    const rank = sortedScores.findIndex((r) => r.id === row.id) + 1;
+    return { rank, medal: rank <= 3 };
+  };
 
   return (
     <>
@@ -269,14 +283,25 @@ export function DataCard({
 
       <Card>
         <CardHeader>
-          <h2 className="flex items-center gap-2 text-xl font-semibold">
-            <ICONS.Rows className="size-6" />
-            {NAME_OF_ROW}s
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-xl font-semibold">
+              <ICONS.Rows className="size-6" />
+              {NAME_OF_ROW}s
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSorted(!isSorted)}
+              className="flex items-center gap-2"
+            >
+              <LuArrowDownUp className="size-4" />
+              {isSorted ? 'Unsort' : 'Sort by Score'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex flex-col gap-4">
-            {sortedRowsWithScore.length === 0 ? (
+            {displayedRows.length === 0 ? (
               <p className="m-auto p-4 text-sm text-muted-foreground">
                 No {NAME_OF_ROW}s added yet.
               </p>
@@ -297,75 +322,80 @@ export function DataCard({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedRowsWithScore.map((row, index) => (
-                      <TableRow key={row.id} className="group hover:bg-muted">
-                        <TableCell>
-                          {index === 0 && (
-                            <FaMedal className="text-yellow-500" />
-                          )}
-                          {index === 1 && <FaMedal className="text-gray-400" />}
-                          {index === 2 && (
-                            <FaMedal className="text-amber-600" />
-                          )}
-                          {index > 2 && index + 1}
-                        </TableCell>
-                        <TableCell>{row.name}</TableCell>
-                        {variables.map((v) => {
-                          const val = row.values[v.name];
-                          return (
-                            <TableCell key={v.id}>
-                              {v.type === 'boolean' ? (
-                                <Checkbox
-                                  checked={val === true}
-                                  onCheckedChange={(checked) =>
-                                    handleValueChange(
-                                      row.id,
-                                      v.name,
-                                      checked ? true : false,
-                                    )
-                                  }
-                                  className="data-[state=checked]:bg-rank-high data-[state=unchecked]:bg-rank-low"
-                                />
-                              ) : (
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={MAX_VARIABLE_NUMERICAL_VALUE}
-                                  value={val?.toString() ?? ''}
-                                  onChange={(e) =>
-                                    handleValueChange(
-                                      row.id,
-                                      v.name,
-                                      parseInt(e.target.value) || 0,
-                                    )
-                                  }
-                                  className={`w-16 border-none bg-transparent p-0 focus:border-none focus:outline-none focus:ring-0 ${getValueColor(
-                                    Number(val),
-                                  )}`}
-                                />
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell>{row.score.toFixed(2)}</TableCell>
-                        <TableCell>
-                          {row.scorePercentage?.toFixed(1)}%
-                        </TableCell>
-                        <TableCell>
-                          {row.relativeScorePercentage?.toFixed(1)}%
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="invisible group-hover:visible"
-                            onClick={() => startEditingRow(row)}
-                          >
-                            <LuPencil className="size-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {displayedRows.map((row) => {
+                      const { rank, medal } = getRankInfo(row);
+                      return (
+                        <TableRow key={row.id} className="group hover:bg-muted">
+                          <TableCell>
+                            {medal && rank === 1 && (
+                              <FaMedal className="text-yellow-500" />
+                            )}
+                            {medal && rank === 2 && (
+                              <FaMedal className="text-gray-400" />
+                            )}
+                            {medal && rank === 3 && (
+                              <FaMedal className="text-amber-600" />
+                            )}
+                            {(!medal || rank > 3) && rank}
+                          </TableCell>
+                          <TableCell>{row.name}</TableCell>
+                          {variables.map((v) => {
+                            const val = row.values[v.name];
+                            return (
+                              <TableCell key={v.id}>
+                                {v.type === 'boolean' ? (
+                                  <Checkbox
+                                    checked={val === true}
+                                    onCheckedChange={(checked) =>
+                                      handleValueChange(
+                                        row.id,
+                                        v.name,
+                                        checked ? true : false,
+                                      )
+                                    }
+                                    className="data-[state=checked]:bg-rank-high data-[state=unchecked]:bg-rank-low"
+                                  />
+                                ) : (
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={MAX_VARIABLE_NUMERICAL_VALUE}
+                                    value={val?.toString() ?? ''}
+                                    onChange={(e) =>
+                                      handleValueChange(
+                                        row.id,
+                                        v.name,
+                                        parseInt(e.target.value) || 0,
+                                      )
+                                    }
+                                    className={`w-16 border-none bg-transparent p-0 focus:border-none focus:outline-none focus:ring-0 ${getValueColor(
+                                      Number(val),
+                                    )}`}
+                                  />
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell>{row.score.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {row.scorePercentage?.toFixed(1)}%
+                          </TableCell>
+                          <TableCell>
+                            {row.relativeScorePercentage?.toFixed(1)}%
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="invisible group-hover:visible"
+                              onClick={() => startEditingRow(row)}
+                            >
+                              <LuPencil className="size-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </ScrollArea>
