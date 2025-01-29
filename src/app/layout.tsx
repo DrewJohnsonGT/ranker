@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { Lato } from 'next/font/google';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from '~/components/ui/Toaster';
 import { TooltipProvider } from '~/components/ui/Tooltip';
 
@@ -25,7 +26,7 @@ export default function RootLayout({
       <body className={font.className}>
         <TooltipProvider>
           <NextThemesProvider attribute="class" defaultTheme="light">
-            {children}
+            <NuqsAdapter>{children}</NuqsAdapter>
             <Toaster />
           </NextThemesProvider>
         </TooltipProvider>

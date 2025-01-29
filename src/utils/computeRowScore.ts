@@ -14,3 +14,6 @@ export function computeRowScore(row: RowData, variables: VariableDefinition[]) {
     return acc;
   }, 0);
 }
+
+
+export const computeMaxRowScore
