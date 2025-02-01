@@ -47,10 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/Table';
-import { VariableDefinition } from '~/types';
+import { useLocalStorageState } from '~/hooks/useLocalStorageState';
+import { RowData, VariableDefinition } from '~/types';
 import {
   MAX_VARIABLE_NUMERICAL_VALUE,
   OPEN_VARIABLE_DIALOG_QUERY_KEY,
+  ROWS_LOCAL_STORAGE_KEY,
 } from '~/utils/constants';
 import { ICONS } from '~/utils/icons';
 
@@ -73,6 +75,10 @@ export function VariablesCard({
   );
   const [editingVariable, setEditingVariable] =
     useState<VariableDefinition | null>(null);
+  const [rows, setRows] = useLocalStorageState<RowData[]>(
+    ROWS_LOCAL_STORAGE_KEY,
+    [],
+  );
 
   const variableForm = useForm<z.infer<typeof variableSchema>>({
     resolver: zodResolver(variableSchema),
@@ -85,6 +91,22 @@ export function VariablesCard({
 
   const handleAddVariable = (data: z.infer<typeof variableSchema>) => {
     if (editingVariable) {
+      // Update variable name in all rows if name changed
+      if (editingVariable.name !== data.name) {
+        const updatedRows = rows.map((row) => {
+          const newValues = { ...row.values };
+          if (editingVariable.name in newValues) {
+            newValues[data.name] = newValues[editingVariable.name];
+            delete newValues[editingVariable.name];
+          }
+          return {
+            ...row,
+            values: newValues,
+          };
+        });
+        setRows(updatedRows);
+      }
+
       setVariables(
         variables.map((v) =>
           v.id === editingVariable.id ? { ...v, ...data } : v,

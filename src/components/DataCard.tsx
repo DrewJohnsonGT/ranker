@@ -161,13 +161,14 @@ export function DataCard({
       return acc;
     }, 0);
 
+    const highestScore = Math.max(...rowsWithScores.map((row) => row.score));
+
     const withPercentages = rowsWithScores.map((row) => ({
       ...row,
       scorePercentage:
         totalPossibleScore > 0 ? (row.score / totalPossibleScore) * 100 : 0,
-      relativeScorePercentage: rowsWithScores[0]?.score
-        ? (row.score / rowsWithScores[0].score) * 100
-        : 0,
+      relativeScorePercentage:
+        highestScore > 0 ? (row.score / highestScore) * 100 : 0,
     }));
 
     return withPercentages;
